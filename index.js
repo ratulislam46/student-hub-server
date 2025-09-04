@@ -30,6 +30,7 @@ async function run() {
 
         const usercollection = client.db('studen-hub').collection('users');
         const noticeCollection = client.db('studen-hub').collection('notices')
+        const forumCollection = client.db('studen-hub').collection('forums')
 
 
         // update user last login time 
@@ -75,6 +76,30 @@ async function run() {
             const data = req.body;
             const addNewNotice = await noticeCollection.insertOne(data);
             res.send(addNewNotice)
+        })
+        // get all notice 
+        app.get('/all-notice', async (req, res) => {
+            const allNotice = await noticeCollection.find().toArray();
+            if (!allNotice) {
+                return res.json({ message: 'Notice not found' })
+            }
+            res.send(allNotice);
+        })
+        // post forum data 
+        app.post('/add-forum', async (req, res) => {
+            const body = req.body;
+            if (!body) {
+                return res.send({ message: "Form data not found" })
+            }
+            const addForum = await forumCollection.insertOne(body);
+            res.send(addForum)
+        })
+        // get all forum 
+        app.get('/all-forums',async(req,res)=>{
+            const AllForum = await forumCollection.find().toArray();
+            if(!AllForum) {
+                return res.send({message:'Forum not found'})
+            }
         })
 
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
