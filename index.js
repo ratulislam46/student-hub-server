@@ -26,11 +26,10 @@ async function run() {
 
 
     try {
-
-
         const usercollection = client.db('studen-hub').collection('users');
-        const noticeCollection = client.db('studen-hub').collection('notices')
-        const forumCollection = client.db('studen-hub').collection('forums')
+        const noticeCollection = client.db('studen-hub').collection('notices');
+        const forumCollection = client.db('studen-hub').collection('forums');
+        const quizCollection = client.db('studen-hub').collection('quiz')
 
 
         // update user last login time 
@@ -95,13 +94,47 @@ async function run() {
             res.send(addForum)
         })
         // get all forum 
-        app.get('/all-forums',async(req,res)=>{
+        app.get('/all-forums', async (req, res) => {
             const AllForum = await forumCollection.find().toArray();
-            if(!AllForum) {
-                return res.send({message:'Forum not found'})
+            if (!AllForum) {
+                return res.send({ message: 'Forum not found' })
             }
+            res.send(AllForum)
         })
+        // get signle forum 
+        app.get('/single-forum/:id', async (req, res) => {
+            const id = req.params;
+            const query = { _id: new ObjectId(id) };
+            if (!query) {
+                return res.send({ message: "Id not found" })
+            }
+            const forum = await forumCollection.findOne(query)
+            res.send(forum)
+        })
+        // get question and answare 
+        app.get("/question-answer", async (req, res) => {
+            const result = await quizCollection.find().toArray();
+            res.send(result)
+        })
+        // patch single question comment 
+        app.patch(`/question-answer/:id`, async (req, res) => {
+            const id = req.params.id;
+            const { comment, user } = req.body;
+            if (!comment || !user) {
+                return res.send({ message: 'Don not find Comment' })
+            }
+            const filter = { _id: new ObjectId(id) }
+            const update = {
+                $push: {
+                    Comment: {
+                        comment, user, createAt: new Date().toISOString()
+                    }
+                }
+            }
 
+            const result = await forumCollection.updateOne(filter, update)
+            res.send(result)
+        })
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
     finally {
